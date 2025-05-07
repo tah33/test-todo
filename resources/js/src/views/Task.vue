@@ -11,7 +11,7 @@
             </div>
             <div class="col-lg-12 d-flex justify-content-between">
                 <h5>Task List</h5>
-                <BButton variant="primary" size="sm" @click="modal = !modal">+ Add New</BButton>
+                <BButton variant="primary" size="sm" @click="addNew()">+ Add New</BButton>
             </div>
         </div>
         <table class="table table-hover">
@@ -40,12 +40,13 @@
                 <td>{{ task.title }}</td>
                 <td>
                     <span v-if="task.is_completed" class="badge bg-success">Completed</span>
-                    <BButton variant="primary" size="sm" v-else @click="taskStore.markTaskComplete(task.id)">Mark as Complete</BButton>
+                    <span v-else class="badge bg-warning">Pending</span>
                 </td>
                 <td>
                     <BDropdown size="sm" text="Action" variant="primary" class="me-2">
-                        <BDropdownItem href="javascript:void(0)" @click="editTask(task.id)">Edit</BDropdownItem>
-                        <BDropdownItem href="javascript:void(0)" @click="taskStore.deleteTask(task.id)">Delete</BDropdownItem>
+                        <BDropdownItem v-if="!task.is_completed" href="javascript:void(0)" @click="taskStore.markTaskComplete(task.id)">Mark as Complete</BDropdownItem>
+                        <BDropdownItem data-test="edit-task" href="javascript:void(0)" @click="editTask(task.id)">Edit</BDropdownItem>
+                        <BDropdownItem data-test="delete-task" class="delete-item" href="javascript:void(0)" @click="taskStore.deleteTask(task.id)">Delete</BDropdownItem>
                     </BDropdown>
                 </td>
             </tr>
@@ -72,7 +73,7 @@
 
 <script setup>
 
-import {BButton, BCol, BContainer, BDropdown, BDropdownItem, BPagination, BRow, BSpinner} from "bootstrap-vue-next";
+import {BButton, BCol, BContainer, BDropdown, BDropdownItem, BPagination, BRow} from "bootstrap-vue-next";
 import {useTaskStore} from '../store/Task.js'
 
 const taskStore = useTaskStore()
@@ -85,6 +86,10 @@ onMounted(() => {
 })
 const modal = ref(false);
 
+function addNew() {
+    modal.value = !modal.value;
+    taskStore.form.id = null;
+}
 async function editTask(id) {
     modal.value = !modal.value
     await taskStore.editTask(id)

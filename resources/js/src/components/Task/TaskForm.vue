@@ -3,12 +3,12 @@
         <form>
             <div class="form-group mb-3">
                 <label for="title">Title</label>
-                <input type="text" v-model="taskStore.form.title" id="title" class="form-control">
+                <input type="text" name="title" v-model="taskStore.form.title" id="title" class="form-control">
                 <p class="text-danger" v-if="taskStore.errors.title">{{ taskStore.errors.title[0] }}</p>
             </div>
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea  v-model="taskStore.form.description" id="description" class="form-control"></textarea>
+                <textarea name="description" v-model="taskStore.form.description" id="description" class="form-control"></textarea>
                 <p class="text-danger" v-if="taskStore.errors.description">{{ taskStore.errors.description[0] }}</p>
             </div>
 

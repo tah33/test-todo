@@ -17,8 +17,8 @@ class AuthController extends Controller
             $credentials = $request->only('email', 'password');
             if (Auth::attempt($credentials)) {
                 auth()->user()->tokens()->delete();
-                $token = $request->user()->createToken($request->email);
-                $user_data = \auth()->user()->toArray();
+                $token              = $request->user()->createToken($request->email);
+                $user_data          = \auth()->user()->toArray();
                 $user_data['token'] = $token->plainTextToken;
 
                 return response()->json([
@@ -28,9 +28,11 @@ class AuthController extends Controller
                 ]);
             } else {
                 return response()->json([
-                    'message' => 'Invalid Credentials',
-                    'success' => false,
-                ]);
+                    'errors'    => [
+                        'email' => ['Invalid Credentials']
+                    ],
+                    'success'   => false,
+                ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
@@ -43,12 +45,12 @@ class AuthController extends Controller
     public function register(UserRequest $request): JsonResponse
     {
         try {
-            $data = $request->all();
-            $data['email_verified_at'] = now();
-            $user = User::create($data);
-            $token = $user->createToken($request->email);
-            $user_data = $user->toArray();
-            $user_data['token'] = $token->plainTextToken;
+            $data                       = $request->all();
+            $data['email_verified_at']  = now();
+            $user                       = User::create($data);
+            $token                      = $user->createToken($request->email);
+            $user_data                  = $user->toArray();
+            $user_data['token']         = $token->plainTextToken;
             return response()->json([
                 'message'   => 'Registered successfully',
                 'success'   => true,
@@ -61,7 +63,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
-    public function me(Request $request): JsonResponse
+    public function me(): JsonResponse
     {
         try {
             $user_data = \auth()->user()->toArray();
@@ -80,7 +82,7 @@ class AuthController extends Controller
     }
 
 
-    public function logout()
+    public function logout(): JsonResponse
     {
         try {
             auth()->user()->tokens()->delete();

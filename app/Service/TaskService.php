@@ -8,11 +8,12 @@ class TaskService
 {
     public function index()
     {
-        return Task::latest()->paginate(10);
+        return Task::where('user_id', auth()->id())->latest()->paginate(10);
     }
 
     public function store($data)
     {
+        $data['user_id'] = auth()->id();
         return Task::create($data);
     }
 

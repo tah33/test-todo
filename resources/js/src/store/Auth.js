@@ -1,72 +1,89 @@
 import { defineStore } from 'pinia';
-import {computed, reactive, ref} from 'vue';
 import axios from '../plugins/axios.js';
 import router from "../router/index.js";
 
-export const useAuthStore = defineStore('auth', () => {
-    const token = ref(null);
-    const user = ref(null);
-    const form = ref({
-        email: '',
-        password: '',
-    });
-    const errors = ref({});
-    const loading = ref(false);
+export const useAuthStore = defineStore('auth', {
+    state: () => ({
+        loading: false,
+        errors: {},
+        form: {
+            email: '',
+            password: '',
+        },
+        message: {
+            type: '', // 'success' | 'error'
+            text: '',
+            show: false,
+            dismissible: true
+        },
+        paginated_data : {
+            currentPage : 1,
+            rows : 10,
+            perPage : 10,
+        },
+        token : localStorage.getItem('token'),
+        user : ''
+    }),
 
-    const login = async () => {
-        try {
-            loading.value = true;
-            let data = {
-                email: form.value.email,
-                password: form.value.password,
+    actions: {
+        async login() {
+            try {
+                this.loading = true;
+                let data = {
+                    email: this.form.email,
+                    password: this.form.password,
+                }
+                const response = await axios.post('/login', data);
+                this.setTokens(response.data);
+                this.loading = false;
+                router.push({name: 'tasks'});
+            } catch (error) {
+                if (error.response && error.response.status === 422) {
+                    this.errors = error.response.data.errors;
+                }
+                this.loading = false;
+                throw error;
             }
-            const response = await axios.post('/login', data);
-            setTokens(response.data);
-            loading.value = false;
-        } catch (error) {
-            if (error.response && error.response.status === 422) {
-                errors.value = error.response.data.errors;
+        },
+        setTokens(data) {
+            localStorage.setItem('token', data.user.token);
+            this.token = data.user.token;
+            this.user = data.user;
+            axios.defaults.headers['Authorization'] = `Bearer ${data.user.token}`;
+        },
+        async fetchUser() {
+            try {
+                const response = await axios.get('/me');
+                this.user = response.data.user;
+            } catch (error) {
+                this.logout();
+                throw error;
             }
-            loading.value = false;
-            logout();
-            throw error;
-        }
-    };
-
-    const setTokens = (data) => {
-        token.value = data.token;
-        user.value = data.user;
-        if (! data.user) {
-            fetchUser()
-        }
-        localStorage.setItem('token', data.token);
-    };
-
-    const fetchUser = async () => {
-        try {
-            const response = await axios.get('/me');
-            user.value = response.data;
-        } catch (error) {
-            logout();
-            throw error;
-        }
-    };
-    const logout = () => {
-        token.value = null;
-        user.value = null;
-        localStorage.removeItem('token');
-        router.push({ name: 'login' });
-    };
-
-    return {
-        form,
-        login,
-        errors,
-        loading,
-        token,
-        user,
-        isAuthenticated: computed(() => !!token.value),
-        setTokens,
-        logout
-    };
+        },
+        async logout() {
+            const response = await axios.post('/logout');
+            this.token = null;
+            this.user = null;
+            localStorage.removeItem('token');
+            router.push({ name: 'login' });
+        },
+        createFormData() {
+            const formData = new FormData()
+            for (const key in this.form) {
+                formData.append(key, this.form[key])
+            }
+            if(this.form.id) {
+                formData.append('_method', 'put')
+            }
+            return formData
+        },
+        resetFormData() {
+            for (const key in this.form) {
+                this.form[key] = '';
+            }
+        },
+        clearNotification() {
+            this.message.show = false;
+        },
+    }
 });

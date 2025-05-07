@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia'
 import axios from '../plugins/axios'
+import router from "@/router/index.js";
 
 export const useTaskStore = defineStore('task', {
     state: () => ({
@@ -119,8 +120,7 @@ export const useTaskStore = defineStore('task', {
             this.message.show = false;
         },
         handleNotification(object) {
-            if (object.status === 200) {
-                console.log(object)
+            if (object.status === 200 || object.status === 201) {
                 this.message = {
                     type: 'success',
                     text: object.data.message,
@@ -129,6 +129,9 @@ export const useTaskStore = defineStore('task', {
                 };
             } else if (object.response && object.response.status === 422) {
                 this.errors = object.response.data.errors;
+            } else if (object.response && object.response.status === 401) {
+                localStorage.removeItem('token');
+                router.push({ name: 'login' });
             } else {
                 this.message = {
                     type: 'danger',

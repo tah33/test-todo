@@ -50,7 +50,7 @@ class TaskController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Task created successfully',
-            ]);
+            ],201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -97,7 +97,7 @@ class TaskController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Task deleted successfully',
-            ]);
+            ], 204);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

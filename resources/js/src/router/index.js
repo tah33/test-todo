@@ -6,16 +6,16 @@ const routes = [
         path: "/",
         children: [
             {
-                path: "/login",
+                path: "login",
                 name: "login",
                 component: () => import("../views/Login.vue"),
-                meta: {requiredAuth: false}
+                meta: {forGuestsOnly: true}
             },
             {
                 path: "/register",
                 name: "register",
                 component: () => import("../views/Register.vue"),
-                meta: {requiredAuth: false}
+                meta: {forGuestsOnly: true}
             },
             {
                 path: "/tasks",
@@ -39,16 +39,21 @@ const router = createRouter({
     },
 });
 
-router.beforeEach(async (to,from) => {
+router.beforeEach(async (to) => {
     const authStore = useAuthStore();
 
-    if (to.meta.requiredAuth && !authStore.isAuthenticated) {
-        await router.push('/login');
+    if (to.meta.requiredAuth && !authStore.token) {
+        return {
+            name: 'login',
+            query: { redirect: to.fullPath }
+        };
     }
 
-    if (to.meta.requiredAuth && authStore.isAuthenticated) {
-        next();
+    if (to.meta.forGuestsOnly && authStore.token) {
+        return { name: 'tasks' };
     }
+
+    return true;
 });
 
 export default router;
